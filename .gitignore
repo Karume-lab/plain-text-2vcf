@@ -1,0 +1,7 @@
+__pycache__
+.vscode
+.env
+.run
+phone_numbers/
+vcf_files/
+venv/
