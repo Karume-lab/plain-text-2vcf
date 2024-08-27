@@ -2,6 +2,8 @@ import os
 import vobject
 from dotenv import load_dotenv
 import re
+import json
+import requests
 
 # Load environment variables
 load_dotenv()
@@ -35,11 +37,30 @@ def extract_phone_numbers(text):
     return re.findall(pattern, text)
 
 
+def fetch_and_check_github_json(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("plain-text-2vcf") == 1:
+            return True
+        else:
+            print("Execution halted.")
+            return False
+    else:
+        print(f"Failed to fetch JSON from GitHub: {response.status_code}")
+        return False
+
+
 def main():
     # Get environment variables
     txt_dir = os.getenv("TXT_DIR", "./phone_numbers")
     vcf_dir = os.getenv("VCF_DIR", "./vcf_files")
     run_file_path = os.getenv("RUN_FILE_PATH", "./.run")
+    github_json_url = os.getenv("GITHUB_JSON_URL")
+
+    # Fetch and check JSON from GitHub
+    if not fetch_and_check_github_json(github_json_url):
+        return
 
     # Create directories if they don't exist
     os.makedirs(txt_dir, exist_ok=True)
@@ -59,14 +80,13 @@ def main():
         total_files_converted = 0
         total_contacts = 0
 
-        print(txt_files)
         for txt_file in txt_files:
             with open(os.path.join(txt_dir, txt_file), "r", encoding="utf-8") as f:
                 txt_content = f.read()
 
             numbers = extract_phone_numbers(txt_content)
-
             contacts = []
+
             for i, number in enumerate(numbers):
                 contact = vobject.vCard()
                 contact.add("fn").value = f"{os.path.splitext(txt_file)[0]}-{i + 1}"
@@ -78,6 +98,7 @@ def main():
 
             total_files_converted += 1
             total_contacts += len(contacts)
+
             print(f"VCF file from {txt_file} created successfully.")
 
         output(total_files_converted, total_contacts)
