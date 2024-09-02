@@ -5,11 +5,9 @@ import re
 import json
 import requests
 
-# Load environment variables
 load_dotenv()
 
 
-# Helper functions
 def get_txt_files(directory):
     return sorted([f for f in os.listdir(directory)])
 
@@ -30,7 +28,6 @@ def output(txt_files_converted, total_contacts):
 
 
 def extract_phone_numbers(text):
-    # This regex pattern matches phone numbers with or without country codes and various separators
     pattern = (
         r"\+?(?:\d{1,3}[-.\s]?)?\(?[0-9]{1,4}\)?[-.\s]?[0-9]{1,4}[-.\s]?[0-9]{1,9}"
     )
@@ -38,35 +35,34 @@ def extract_phone_numbers(text):
 
 
 def fetch_and_check_github_json(url):
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        if data.get("plain-text-2vcf") == 1:
-            return True
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("plain-text-2vcf") == 1:
+                return True
+            else:
+                print("Execution halted.")
+                return False
         else:
-            print("Execution halted.")
+            print(f"Failed to fetch JSON from GitHub: {response.status_code}")
             return False
-    else:
-        print(f"Failed to fetch JSON from GitHub: {response.status_code}")
-        return False
+    except Exception:
+        print("Connect to the internet and try again")
 
 
 def main():
-    # Get environment variables
     txt_dir = os.getenv("TXT_DIR", "./phone_numbers")
     vcf_dir = os.getenv("VCF_DIR", "./vcf_files")
     run_file_path = os.getenv("RUN_FILE_PATH", "./.run")
     github_json_url = os.getenv("GITHUB_JSON_URL")
 
-    # Fetch and check JSON from GitHub
     if not fetch_and_check_github_json(github_json_url):
         return
 
-    # Create directories if they don't exist
     os.makedirs(txt_dir, exist_ok=True)
     os.makedirs(vcf_dir, exist_ok=True)
 
-    # Check if the program should run
     try:
         with open(run_file_path, "r") as run_file:
             if run_file.read().strip() != "True":
@@ -75,7 +71,6 @@ def main():
                 )
                 return
 
-        # Process text files
         txt_files = get_txt_files(txt_dir)
         total_files_converted = 0
         total_contacts = 0
