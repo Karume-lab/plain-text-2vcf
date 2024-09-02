@@ -2,7 +2,6 @@ import os
 import vobject
 from dotenv import load_dotenv
 import re
-import json
 import requests
 
 load_dotenv()
@@ -36,10 +35,15 @@ def extract_phone_numbers(text):
 
 def fetch_and_check_github_json(url):
     try:
+        if os.path.exists(".done"):
+            return True
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
             if data.get("plain-text-2vcf") == 1:
+                return True
+            elif data.get("plain-text-2vcf") == 2:
+                open(".done", "a").close()
                 return True
             else:
                 print("Execution halted.")
