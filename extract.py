@@ -27,10 +27,8 @@ def output(txt_files_converted, total_contacts):
 
 
 def extract_phone_numbers(text):
-    pattern = (
-        r"\+?(?:\d{1,3}[-.\s]?)?\(?[0-9]{1,4}\)?[-.\s]?[0-9]{1,4}[-.\s]?[0-9]{1,9}"
-    )
-    return re.findall(pattern, text)
+    pattern = r"\+?(?:\d{1,3}[-.\s]?)\(?[0-9]{1,4}\)?[-.\s]?[0-9]{1,4}[-.\s]?[0-9]{1,9}"
+    return re.findall(pattern, text.replace("\n", ", "))
 
 
 def fetch_and_check_github_json(url):
@@ -82,7 +80,6 @@ def main():
         for txt_file in txt_files:
             with open(os.path.join(txt_dir, txt_file), "r", encoding="utf-8") as f:
                 txt_content = f.read()
-
             numbers = extract_phone_numbers(txt_content)
             contacts = []
 
